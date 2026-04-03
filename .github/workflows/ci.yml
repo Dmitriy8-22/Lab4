@@ -63,18 +63,17 @@ jobs:
         cd build
         cmake --build . --config Release
     
-    - name: Find and Test
-    shell: pwsh
-    run: |
-      cd build
-      # Ищем exe файл
-      $exe = Get-ChildItem -Recurse -Filter "solver_app.exe" | Select-Object -First 1
-      if ($exe) {
-        Write-Host "Found: $($exe.FullName)"
-        echo "1 1 -2 1" | & $exe.FullName
-      } else {
+    - name: Test
+      shell: pwsh
+      run: |
+        cd build
+        $exe = Get-ChildItem -Recurse -Filter "solver_app.exe" | Select-Object -First 1
+        if ($exe) {
+          Write-Host "Found: $($exe.FullName)"
+          echo "1 1 -2 1" | & $exe.FullName
+        } else {
         Write-Host "ERROR: solver_app.exe not found"
         Get-ChildItem -Recurse -Filter "*.exe"
         exit 1
-      }
+        }
   
