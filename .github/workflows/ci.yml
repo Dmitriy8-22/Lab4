@@ -1,0 +1,71 @@
+name: CI
+
+on: [push]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies for Clang
+      if: matrix.compiler == 'clang'
+      run: |
+        sudo apt update
+        sudo apt install -y libc++-dev libc++abi-dev
+    
+    - name: Configure with GCC
+      if: matrix.compiler == 'gcc'
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+    
+    - name: Configure with Clang
+      if: matrix.compiler == 'clang'
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+                 -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
+                 -DCMAKE_EXE_LINKER_FLAGS="-stdlib=libc++"
+    
+    - name: Build
+      run: |
+        cd build
+        cmake --build .
+    
+    - name: Test
+      run: |
+        cd build
+        echo "1 1 -2 1" | ./solver_application/solver_app
+      continue-on-error: true
+
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configure
+      shell: cmd
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+    
+    - name: Build
+      shell: cmd
+      run: |
+        cd build
+        cmake --build . --config Release
+    
+    - name: Test
+      shell: cmd
+      run: |
+        cd build\Release
+        echo 1 1 -2 1 | solver_app.exe
+      continue-on-error: true
